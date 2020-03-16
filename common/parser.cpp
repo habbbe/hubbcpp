@@ -21,7 +21,7 @@ constexpr auto entry_parser = []{
 }();
 
 std::string default_config() {
-    return std::string{getenv("HOME")} + "/.hub";
+    return std::string{getenv("HOME")} + "/.hubb";
 }
 
 std::vector<entry> parse(const std::string& path) {

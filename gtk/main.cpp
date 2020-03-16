@@ -15,7 +15,6 @@ int main(int argc, char *argv[])
 {
     const std::string conf = argc > 1 ? argv[1] : default_config();
     auto entries = parse(conf);
-
     argc = 1;
     auto app = Gtk::Application::create(argc, argv, "");
     Gtk::Window window;
