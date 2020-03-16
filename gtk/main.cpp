@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
             if constexpr (std::is_same_v<T, action>) {
                 auto* hbox = Gtk::make_managed<Gtk::HBox>();
                 auto* keep = Gtk::make_managed<Gtk::Button>("  ", false);
-                auto run = [c = entry.command] {std::thread([c]{std::system(c.c_str());}).detach();};
+                auto run = [&c = entry.command] {std::thread([&c]{std::system(c.c_str());}).detach();};
                 keep->signal_clicked().connect(run);
                 auto* close = Gtk::make_managed<Gtk::Button>(entry.name, false);
                 close->signal_clicked().connect([run,&app]{ run(); app->quit(); });
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
                 auto* label = Gtk::make_managed<Gtk::Label>(entry.name);
                 label->set_tooltip_text(entry.command);
                 box.pack_start(*label, Gtk::PACK_SHRINK);
-                std::thread([label, entry]{
+                std::thread([label, &entry]{
                     if (entry.command.empty()) { label->set_text(entry.name); return; }
                     std::string result = entry.name;
                     while (true) {
