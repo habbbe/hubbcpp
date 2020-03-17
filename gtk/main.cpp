@@ -40,22 +40,22 @@ int main(int argc, char *argv[])
         std::visit([&](auto&& entry){
             using T = std::decay_t<decltype(entry)>;
             if constexpr (std::is_same_v<T, action>) {
-                auto* hbox = Gtk::make_managed<Gtk::HBox>();
-                auto* keep = Gtk::make_managed<Gtk::Button>("  ", false);
-                auto run = [&c = entry.command] {std::thread([&c]{std::system(c.c_str());}).detach();};
+                auto hbox = Gtk::make_managed<Gtk::HBox>();
+                auto keep = Gtk::make_managed<Gtk::Button>("  ", false);
+                auto run = [c = entry.command.c_str()] {std::thread([c]{std::system(c);}).detach();};
                 keep->signal_clicked().connect(run);
-                auto* close = Gtk::make_managed<Gtk::Button>(entry.name, false);
+                auto close = Gtk::make_managed<Gtk::Button>(entry.name, false);
                 close->signal_clicked().connect([run,&app]{ run(); app->quit(); });
                 close->set_tooltip_text(entry.command);
                 hbox->pack_start(*keep, Gtk::PACK_SHRINK);
                 hbox->pack_start(*close, Gtk::PACK_EXPAND_WIDGET);
                 box.pack_start(*hbox, Gtk::PACK_SHRINK);
             } else if constexpr (std::is_same_v<T, info>) {
-                auto* label = Gtk::make_managed<Gtk::Label>(entry.name);
+                auto label = Gtk::make_managed<Gtk::Label>(entry.name);
                 label->set_tooltip_text(entry.command);
                 box.pack_start(*label, Gtk::PACK_SHRINK);
+                if (entry.command.empty()) { label->set_text(entry.name); return; }
                 std::thread([label, &entry]{
-                    if (entry.command.empty()) { label->set_text(entry.name); return; }
                     std::string result = entry.name;
                     while (true) {
                         result.resize(entry.name.size());
@@ -75,16 +75,16 @@ int main(int argc, char *argv[])
                 }
                 ).detach();
             } else if constexpr (std::is_same_v<T, separator>) {
-                auto* sep = Gtk::make_managed<Gtk::Separator>();
+                auto sep = Gtk::make_managed<Gtk::Separator>();
                 sep->set_size_request(-1, 2);
                 sep->set_margin_top(3);
                 sep->set_margin_bottom(3);
                 box.pack_start(*sep, Gtk::PACK_SHRINK);
             } else if constexpr (std::is_same_v<T, space>) {
-                auto* space = Gtk::make_managed<Gtk::Label>(" ");
+                auto space = Gtk::make_managed<Gtk::Label>(" ");
                 box.pack_start(*space, Gtk::PACK_SHRINK);
             } else if constexpr (std::is_same_v<T, syntax_error>) {
-                auto* error = Gtk::make_managed<Gtk::Label>("Syntax error: " + entry.error);
+                auto error = Gtk::make_managed<Gtk::Label>("Syntax error: " + entry.error);
                 box.pack_start(*error, Gtk::PACK_SHRINK);
             }
         }, e_variant);
@@ -92,6 +92,4 @@ int main(int argc, char *argv[])
 
     window.show_all_children();
     return app->run(window);
-
-    return 0;
 }
