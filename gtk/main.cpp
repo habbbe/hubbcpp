@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
                         Glib::signal_idle().connect_once([&] {
                             label->set_text(result);
                         });
-                        std::this_thread::sleep_for(std::chrono::seconds(1));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(entry.update_rate));
                     }
                 }
                 ).detach();

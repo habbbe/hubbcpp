@@ -11,8 +11,9 @@ constexpr auto entry_parser = []{
 
     constexpr auto parse_name = until_item('=');
     constexpr auto parse_cmd = not_empty(rest());
+    constexpr auto parse_update_rate = (item('-') >> integer<unsigned>() << item(':')) || (item(':') >= 1000u);
     constexpr auto parse_action = seq("Com:") >> lift_value<action>(parse_name, parse_cmd);
-    constexpr auto parse_info = seq("Info:") >> lift_value<info>(parse_name, parse_cmd);
+    constexpr auto parse_info = seq("Info") >> lift_value<info>(parse_update_rate, parse_name, parse_cmd);
     constexpr auto parse_separator = seq("Separator") >> mreturn_emplace<separator>();
     constexpr auto parse_space = seq("Space") >> mreturn_emplace<space>();
     constexpr auto parse_error = lift_value<syntax_error>(rest());

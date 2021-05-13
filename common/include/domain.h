@@ -4,6 +4,7 @@ struct action {
     std::string name, command;
 };
 struct info {
+    unsigned update_rate;
     std::string name, command;
 };
 
