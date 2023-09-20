@@ -6,7 +6,8 @@ link_directories(
     ${GTKMM_LIBRARY_DIRS}  )
 
 include_directories(
-    ${GTKMM_INCLUDE_DIRS}  )
+    ${GTKMM_INCLUDE_DIRS}
+    /usr/lib/atkmm-1.6/include)
 
 set(PLATFORM_SPECIFIC_LIBS "-lpthread")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")

@@ -2,6 +2,7 @@
 #include <string_view>
 #include <variant>
 #include <thread>
+#include <fcntl.h>
 #include <fstream>
 #include <iostream>
 #include <cstdio>
@@ -36,6 +37,7 @@ int main(int argc, char *argv[])
     scrollWindow.add(box);
     window.add(scrollWindow);
 
+    const auto startTime = std::chrono::steady_clock::now();
     for (const entry& e_variant : entries) {
         std::visit([&](auto&& entry){
             using T = std::decay_t<decltype(entry)>;
@@ -55,22 +57,35 @@ int main(int argc, char *argv[])
                 label->set_tooltip_text(entry.command);
                 box.pack_start(*label, Gtk::PACK_SHRINK);
                 if (entry.command.empty()) { label->set_text(entry.name); return; }
-                std::thread([label, &entry]{
+                std::thread([label, startTime, &entry]{
                     std::string result = entry.name;
+                    auto updateAt = startTime;
                     while (true) {
+                        updateAt += std::chrono::milliseconds(entry.update_rate);
                         result.resize(entry.name.size());
                         {
                             std::unique_ptr<FILE, decltype(&pclose)> file(popen(entry.command.c_str(), "r"), pclose);
-                            std::array<char, 128> buffer;
-                            while (fgets(buffer.data(), buffer.size(), file.get()) != nullptr) {
-                                result += buffer.data();
+                            int d = fileno(file.get());
+                            fcntl(d, F_SETFL, O_NONBLOCK);
+                            char buffer[128];
+
+                            while (true) {
+                                auto r = read(d, buffer, 127);
+                                if (r == -1 && errno == EAGAIN) {
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                                    continue;
+                                } else if (r > 0) {
+                                    result.append(buffer, buffer + r);
+                                } else {
+                                    break;
+                                }
                             }
                         }
                         if (result.size() > entry.name.size()) result.pop_back(); 
                         Glib::signal_idle().connect_once([&] {
                             label->set_text(result);
                         });
-                        std::this_thread::sleep_for(std::chrono::milliseconds(entry.update_rate));
+                        std::this_thread::sleep_until(updateAt);
                     }
                 }
                 ).detach();
